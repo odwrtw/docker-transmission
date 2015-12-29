@@ -1,0 +1,13 @@
+transmission:
+  build: .
+  container_name: transmission
+  restart: always
+  environment:
+  - UID=1000
+  - GID=1000
+  volumes:
+      - /home/greg/downloads/doing:/downloads/doing
+      - /home/greg/downloads/done:/downloads/done
+  ports:
+      - 127.0.0.1:9091:9091
+      - 51413:51413
