@@ -2,6 +2,9 @@ transmission:
   build: .
   container_name: transmission
   restart: always
+  dns:
+  - 8.8.8.8
+  - 8.8.4.4
   environment:
   - UID=1000
   - GID=1000
