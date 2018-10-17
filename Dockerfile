@@ -1,9 +1,7 @@
-FROM debian:9.4
+FROM alpine:3.8
 
-RUN apt-get update && \
-    apt-get install -y transmission-daemon sudo && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    adduser transmission
+RUN apk add --no-cache shadow transmission-daemon && \
+    usermod -s /bin/sh transmission
 
 EXPOSE 9091
 EXPOSE 51413
