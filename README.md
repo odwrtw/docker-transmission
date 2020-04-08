@@ -1,25 +1,17 @@
-## Installation
+## Usage
 
-Copy the configuration files and edit them to suit your needs.
-
-```sh
-cp settings.json.example settings.json
-cp docker-compose.yml.example docker-compose.yml
-```
-
-## UID && GID
-
-You can set your user's UID and GID to write to the docker volumes with the proper rights. Just set the UID and GID environment vars in the docker-compose file.
-
-## Build
+Create a directory for the configuration on the host, e.g if you're bob create `/home/bob/.config/transmission`.
 
 ```sh
-docker-compose build
+docker run \
+        --detach \
+        --hostname "transmission" \
+        --name "transmission" \
+        --user "$(id -u):$(id -g)" \
+        --restart "unless-stopped" \
+        --volume "/home/bob/.config/transmission:/home/transmission/config" \
+        --volume "/home/bob/downloads/:/home/transmission/downloads" \
+        odwrtw/transmission:latest
 ```
 
-## Run
-
-```sh
-docker-compose up -d
-```
-
+If you want to configure transmission, launch the container, it will create all the default configuration files. Stop the container and modify those files and launch the container again.
