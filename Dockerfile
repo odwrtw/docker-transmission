@@ -1,26 +1,22 @@
-FROM ubuntu:18.04 as builder
-ENV REPO_URL https://github.com/transmission/transmission
-ENV REPO_COMMIT 20119f006c
-RUN mkdir -p /build/usr /src
-WORKDIR src
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y build-essential automake autoconf libtool pkg-config intltool \
-    libcurl4-openssl-dev libglib2.0-dev libevent-dev libminiupnpc-dev git libssl-dev && \
-    git clone "$REPO_URL" . && \
-    git checkout "$REPO_COMMIT" && \
-    git submodule update --init && \
-    ./autogen.sh && \
-    ./configure --enable-daemon --without-gtk --disable-cli --disable-mac --disable-nls --prefix /build/usr && \
-    make && \
-    make install && \
-    mkdir -p /build/lib/x86_64-linux-gnu/ && \
-    mkdir -p /build/usr/lib/x86_64-linux-gnu/ && \
-    ldd /build/usr/bin/transmission-daemon | grep '=>' | awk '{ print $3 }' | xargs -I '{}' cp "{}" "/build{}"
+FROM alpine:3.11.5 as builder
+ENV RELEASE_REVISION=44fc571a67
+ENV RELEASE_URL=https://build.transmissionbt.com/job/trunk-linux/lastBuild/artifact/transmission-master-r${RELEASE_REVISION}.tar.xz
 
-FROM ubuntu:18.04
-COPY --from=builder /build /
-RUN useradd --create-home --user-group transmission
+RUN apk add --no-cache curl-dev libevent-dev openssl-dev git tar xz g++ make && \
+    mkdir -p /tmp/src /tmp/build/usr && \
+    cd /tmp/src && \
+    wget "$RELEASE_URL" && \
+    xz -d transmission-master-r${RELEASE_REVISION}.tar.xz && \
+    tar -xf transmission-master-r${RELEASE_REVISION}.tar -C . && \
+    cd "/tmp/src/transmission-3.00+" && \
+    ./configure --enable-daemon --without-gtk --disable-cli --disable-mac --disable-nls --prefix=/tmp/build/usr && \
+    make && \
+    make install
+
+FROM alpine:3.11.5
+COPY --from=builder /tmp/build /
+RUN apk add --no-cache libevent libcurl && \
+    adduser -D transmission
 USER transmission
 WORKDIR /home/transmission
 RUN mkdir -p /home/transmission/config /home/transmission/downloads
